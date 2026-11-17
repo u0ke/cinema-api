@@ -1,36 +1,25 @@
 
 import express from "express";
-import {
-    seances,
-    films,
-    prochainId,
-    placesRestantes
-} from "../data.js";
+import { seances, films, prochainId, placesRestantes } from "../data.js";
 import { validerId } from "../middlewares.js";
 
 const router = express.Router();
 
+// POST create a séance
 router.post("/", (req, res) => {
-    const { filmId, date, heure, salle, places } = req.body;
+    const filmId = req.body.filmId;
+    const date = req.body.date;
+    const heure = req.body.heure;
+    const salle = req.body.salle;
+    const places = req.body.places;
 
-    if (
-        !Number.isInteger(filmId) ||
-        filmId <= 0 ||
-        typeof date !== "string" ||
-        !date.trim() ||
-        typeof heure !== "string" ||
-        !heure.trim() ||
-        typeof salle !== "string" ||
-        !salle.trim() ||
-        !Number.isInteger(places) ||
-        places < 1
-    ) {
+    if (!filmId || !date || !heure || !salle || !places || places < 1) {
         return res.status(400).json({
-            erreur: "FilmId, date, heure, salle et places valides sont obligatoires"
+            erreur: "Données invalides"
         });
     }
 
-    const film = films.find(f => f.id === filmId);
+    const film = films.find(film => film.id === filmId);
 
     if (!film) {
         return res.status(404).json({
@@ -40,11 +29,11 @@ router.post("/", (req, res) => {
 
     const nouvelleSeance = {
         id: prochainId(seances),
-        filmId,
-        date: date.trim(),
-        heure: heure.trim(),
-        salle: salle.trim(),
-        places
+        filmId: filmId,
+        date: date,
+        heure: heure,
+        salle: salle,
+        places: places
     };
 
     seances.push(nouvelleSeance);
@@ -52,10 +41,11 @@ router.post("/", (req, res) => {
     res.status(201).json(nouvelleSeance);
 });
 
+// GET séance by ID
 router.get("/:id", validerId, (req, res) => {
     const id = req.id;
 
-    const seance = seances.find(s => s.id === id);
+    const seance = seances.find(seance => seance.id === id);
 
     if (!seance) {
         return res.status(404).json({
@@ -63,10 +53,17 @@ router.get("/:id", validerId, (req, res) => {
         });
     }
 
-    res.json({
-        ...seance,
+    const resultat = {
+        id: seance.id,
+        filmId: seance.filmId,
+        date: seance.date,
+        heure: seance.heure,
+        salle: seance.salle,
+        places: seance.places,
         placesRestantes: placesRestantes(seance)
-    });
+    };
+
+    res.json(resultat);
 });
 
 export default router;

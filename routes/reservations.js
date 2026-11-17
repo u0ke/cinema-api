@@ -1,32 +1,24 @@
 
 import express from "express";
-import {
-    reservations,
-    seances,
-    prochainId,
-    placesRestantes
-} from "../data.js";
+import { reservations, seances, prochainId, placesRestantes } from "../data.js";
 import { validerId } from "../middlewares.js";
 
 const router = express.Router();
 
+// POST create a reservation
 router.post("/seances/:id/reservations", validerId, (req, res) => {
     const id = req.id;
-    const { nom, nbPlaces } = req.body;
 
-    if (
-        typeof nom !== "string" ||
-        !nom.trim() ||
-        !Number.isInteger(nbPlaces) ||
-        nbPlaces < 1 ||
-        nbPlaces > 10
-    ) {
+    const nom = req.body.nom;
+    const nbPlaces = req.body.nbPlaces;
+
+    if (!nom || !nbPlaces || nbPlaces < 1 || nbPlaces > 10) {
         return res.status(400).json({
             erreur: "Nom et nombre de places entre 1 et 10 obligatoires"
         });
     }
 
-    const seance = seances.find(s => s.id === id);
+    const seance = seances.find(seance => seance.id === id);
 
     if (!seance) {
         return res.status(404).json({
@@ -43,8 +35,8 @@ router.post("/seances/:id/reservations", validerId, (req, res) => {
     const nouvelleReservation = {
         id: prochainId(reservations),
         seanceId: id,
-        nom: nom.trim(),
-        nbPlaces
+        nom: nom,
+        nbPlaces: nbPlaces
     };
 
     reservations.push(nouvelleReservation);
@@ -52,10 +44,11 @@ router.post("/seances/:id/reservations", validerId, (req, res) => {
     res.status(201).json(nouvelleReservation);
 });
 
+// GET reservations of a séance
 router.get("/seances/:id/reservations", validerId, (req, res) => {
     const id = req.id;
 
-    const seance = seances.find(s => s.id === id);
+    const seance = seances.find(seance => seance.id === id);
 
     if (!seance) {
         return res.status(404).json({
@@ -63,25 +56,24 @@ router.get("/seances/:id/reservations", validerId, (req, res) => {
         });
     }
 
-    const resultat = reservations.filter(
-        r => r.seanceId === id
-    );
+    const resultat = reservations.filter(reservation => reservation.seanceId === id);
 
     res.json(resultat);
 });
 
+// DELETE a reservation
 router.delete("/reservations/:id", validerId, (req, res) => {
     const id = req.id;
 
-    const index = reservations.findIndex(
-        r => r.id === id
-    );
+    const reservation = reservations.find(reservation => reservation.id === id);
 
-    if (index === -1) {
+    if (!reservation) {
         return res.status(404).json({
             erreur: "Réservation introuvable"
         });
     }
+
+    const index = reservations.findIndex(reservation => reservation.id === id);
 
     reservations.splice(index, 1);
 
