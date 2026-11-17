@@ -1,6 +1,7 @@
 
 import express from "express";
 import { films, seances, prochainId } from "../data.js";
+import { validerId } from "../middlewares.js";
 
 const router = express.Router();
 
@@ -22,8 +23,8 @@ router.get("/", (req, res) => {
     res.json(resultat);
 });
 
-router.get("/:id", (req, res) => {
-    const id = Number(req.params.id);
+router.get("/:id", validerId, (req, res) => {
+    const id = req.id;
 
     const film = films.find(f => f.id === id);
 
@@ -36,8 +37,8 @@ router.get("/:id", (req, res) => {
     res.json(film);
 });
 
-router.get("/:id/seances", (req, res) => {
-    const id = Number(req.params.id);
+router.get("/:id/seances", validerId, (req, res) => {
+    const id = req.id;
 
     const film = films.find(f => f.id === id);
 
@@ -58,9 +59,12 @@ router.post("/", (req, res) => {
     const { titre, genre, duree } = req.body;
 
     if (
-        !titre ||
-        !genre ||
+        typeof titre !== "string" ||
+        !titre.trim() ||
+        typeof genre !== "string" ||
+        !genre.trim() ||
         typeof duree !== "number" ||
+        !Number.isFinite(duree) ||
         duree <= 0
     ) {
         return res.status(400).json({
@@ -81,7 +85,7 @@ router.post("/", (req, res) => {
     const nouveauFilm = {
         id: prochainId(films),
         titre: titre.trim(),
-        genre,
+        genre: genre.trim(),
         duree
     };
 
@@ -90,8 +94,8 @@ router.post("/", (req, res) => {
     res.status(201).json(nouveauFilm);
 });
 
-router.delete("/:id", (req, res) => {
-    const id = Number(req.params.id);
+router.delete("/:id", validerId, (req, res) => {
+    const id = req.id;
 
     const index = films.findIndex(
         film => film.id === id

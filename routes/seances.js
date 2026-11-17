@@ -1,6 +1,12 @@
 
 import express from "express";
-import { seances, films, prochainId, placesRestantes } from "../data.js";
+import {
+    seances,
+    films,
+    prochainId,
+    placesRestantes
+} from "../data.js";
+import { validerId } from "../middlewares.js";
 
 const router = express.Router();
 
@@ -8,14 +14,19 @@ router.post("/", (req, res) => {
     const { filmId, date, heure, salle, places } = req.body;
 
     if (
-        !date ||
-        !heure ||
-        !salle ||
+        !Number.isInteger(filmId) ||
+        filmId <= 0 ||
+        typeof date !== "string" ||
+        !date.trim() ||
+        typeof heure !== "string" ||
+        !heure.trim() ||
+        typeof salle !== "string" ||
+        !salle.trim() ||
         !Number.isInteger(places) ||
         places < 1
     ) {
         return res.status(400).json({
-            erreur: "Date, heure, salle et places valides sont obligatoires"
+            erreur: "FilmId, date, heure, salle et places valides sont obligatoires"
         });
     }
 
@@ -30,9 +41,9 @@ router.post("/", (req, res) => {
     const nouvelleSeance = {
         id: prochainId(seances),
         filmId,
-        date,
-        heure,
-        salle,
+        date: date.trim(),
+        heure: heure.trim(),
+        salle: salle.trim(),
         places
     };
 
@@ -41,8 +52,8 @@ router.post("/", (req, res) => {
     res.status(201).json(nouvelleSeance);
 });
 
-router.get("/:id", (req, res) => {
-    const id = Number(req.params.id);
+router.get("/:id", validerId, (req, res) => {
+    const id = req.id;
 
     const seance = seances.find(s => s.id === id);
 
