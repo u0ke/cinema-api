@@ -2,6 +2,7 @@
 import express from "express";
 import filmsRouter from "./routes/films.js";
 import seancesRouter from "./routes/seances.js";
+import reservationsRouter from "./routes/reservations.js";
 
 const app = express();
 
